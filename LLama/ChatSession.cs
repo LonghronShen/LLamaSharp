@@ -2,25 +2,29 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 
 namespace LLama
 {
-    public class ChatSession<T> where T: IChatModel
+
+    public class ChatSession<T>
+        where T : IChatModel
     {
-        IChatModel _model;
-        List<ChatMessageRecord> History { get; } = new List<ChatMessageRecord>();
-        
+
+        protected readonly IChatModel _model;
+
+        public List<ChatMessageRecord> History { get; } = new List<ChatMessageRecord>();
+
         public ChatSession(T model)
         {
-            _model = model;
+            this._model = model;
         }
 
-        public IEnumerable<string> Chat(string text, string? prompt = null, string encoding = "UTF-8")
+        public virtual IEnumerable<string> Chat(string text, string? prompt = null, string encoding = "UTF-8")
         {
             History.Add(new ChatMessageRecord(new ChatCompletionMessage(ChatRole.Human, text), DateTime.Now));
             string totalResponse = "";
-            foreach(var response in _model.Chat(text, prompt, encoding))
+            foreach (var response in _model.Chat(text, prompt, encoding))
             {
                 totalResponse += response;
                 yield return response;
@@ -36,7 +40,12 @@ namespace LLama
 
         public ChatSession<T> WithPromptFile(string promptFilename, string encoding = "UTF-8")
         {
-            return WithPrompt(File.ReadAllText(promptFilename), encoding);
+            if (!string.IsNullOrEmpty(promptFilename))
+            {
+                return WithPrompt(File.ReadAllText(promptFilename), encoding);
+            }
+
+            return this;
         }
 
         /// <summary>
@@ -44,10 +53,12 @@ namespace LLama
         /// </summary>
         /// <param name="humanName"></param>
         /// <returns></returns>
-        public ChatSession<T> WithAntiprompt(string[] antiprompt)
+        public ChatSession<T> WithAntiprompt(IEnumerable<string> antiprompt)
         {
-            _model.InitChatAntiprompt(antiprompt);
+            _model.InitChatAntiprompt(antiprompt.ToArray());
             return this;
         }
+
     }
+
 }

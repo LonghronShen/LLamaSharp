@@ -1,33 +1,44 @@
 ﻿using LLama.WebAPI.Models;
+using Microsoft.Extensions.Options;
 
-namespace LLama.WebAPI.Services;
-
-public class ChatService
+namespace LLama.WebAPI.Services
 {
-    private readonly ChatSession<LLamaModel> _session;
 
-    public ChatService()
+    public class ChatService
+        : IChatService
     {
-        LLamaModel model = new(new LLamaParams(model: @"ggml-model-q4_0.bin", n_ctx: 512, interactive: true, repeat_penalty: 1.0f, verbose_prompt: false));
-        _session = new ChatSession<LLamaModel>(model)
-            .WithPromptFile(@"Assets\chat-with-bob.txt")
-            .WithAntiprompt(new string[] { "User:" });
-    }
 
-    public string Send(SendMessageInput input)
-    {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine(input.Text);
+        private readonly ChatSession<LLamaModel> _session;
+        private readonly ChatServiceOptions _options;
+        private readonly LLamaModel _model;
 
-        Console.ForegroundColor = ConsoleColor.White;
-        var outputs = _session.Chat(input.Text);
-        var result = "";
-        foreach (var output in outputs)
+        public ChatService(IOptions<ChatServiceOptions> options)
         {
-            Console.Write(output);
-            result += output;
+            this._options = options.Value;
+            this._model = new LLamaModel(this._options.ModelParams);
+
+            this._session = new ChatSession<LLamaModel>(this._model)
+                .WithPromptFile(this._options.PromptFilePath)
+                .WithAntiprompt(this._options.Antiprompts);
         }
 
-        return result;
+        public string Send(SendMessageInput input)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(input.Text);
+
+            Console.ForegroundColor = ConsoleColor.White;
+            var outputs = _session.Chat(input.Text);
+            var result = "";
+            foreach (var output in outputs)
+            {
+                Console.Write(output);
+                result += output;
+            }
+
+            return result;
+        }
+
     }
+
 }
