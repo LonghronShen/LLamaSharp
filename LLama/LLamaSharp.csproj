@@ -51,11 +51,11 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' != 'GPU'">
-		<PackageReference Include="llama_cpp.runtime.any.runtime.native.llama.cpp" Version="1.37.1" PrivateAssets="all" />
+		<PackageReference Include="llama_cpp.runtime.any.runtime.native.llama.cpp" Version="1.38.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'GPU'">
-		<PackageReference Include="LLamaSharp.Backend.Cuda11" Version="0.3.0" PrivateAssets="all" />
+		<PackageReference Include="LLamaSharp.Backend.Cuda11" Version="0.3.0" />
 	</ItemGroup>
 
 </Project>
