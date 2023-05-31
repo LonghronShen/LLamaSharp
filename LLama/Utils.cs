@@ -1,18 +1,19 @@
-﻿using LLama.Native;
+﻿using LLama.Exceptions;
+using LLama.Native;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using LLama.Exceptions;
-using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.IO;
+using System.Text;
 
 namespace LLama
 {
     using llama_token = Int32;
-    internal static class Utils
+
+    public static class Utils
     {
+
         public static SafeLLamaContextHandle llama_init_from_gpt_params(ref LLamaParams @params)
         {
             var lparams = NativeApi.llama_context_default_params();
@@ -33,7 +34,7 @@ namespace LLama
 
             var ctx_ptr = NativeApi.llama_init_from_file(@params.model, lparams);
 
-            if(ctx_ptr == IntPtr.Zero )
+            if (ctx_ptr == IntPtr.Zero)
             {
                 throw new RuntimeError($"Failed to load model {@params.model}.");
             }
@@ -44,7 +45,7 @@ namespace LLama
             {
                 int err = NativeApi.llama_apply_lora_from_file(ctx, @params.lora_adapter,
                     string.IsNullOrEmpty(@params.lora_base) ? null : @params.lora_base, @params.n_threads);
-                if(err != 0)
+                if (err != 0)
                 {
                     throw new RuntimeError("Failed to apply lora adapter.");
                 }
@@ -57,7 +58,7 @@ namespace LLama
             var cnt = Encoding.GetEncoding(encoding).GetByteCount(text);
             llama_token[] res = new llama_token[cnt + (add_bos ? 1 : 0)];
             int n = NativeApi.llama_tokenize(ctx, text, res, res.Length, add_bos);
-            if(n < 0)
+            if (n < 0)
             {
                 throw new RuntimeError("Error happened during tokenization. It's possibly caused by wrong encoding. Please try to " +
                     "specify the encoding.");
@@ -69,6 +70,11 @@ namespace LLama
         {
             var logits = NativeApi.llama_get_logits(ctx);
             return new Span<float>(logits, length);
+        }
+
+        public static string llama_print_system_info()
+        {
+            return PtrToStringUTF8(NativeApi.llama_print_system_info());
         }
 
         public static unsafe string PtrToStringUTF8(IntPtr ptr)

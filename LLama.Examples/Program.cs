@@ -1,6 +1,8 @@
 ﻿using LLama;
 using LLama.Examples;
 
+Console.WriteLine(Utils.llama_print_system_info());
+
 Console.WriteLine("================LLamaSharp Examples==================\n");
 
 Console.WriteLine("Please input a number to choose an example to run:");
